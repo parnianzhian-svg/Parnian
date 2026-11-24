@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parnian's World</title>
+<style>
+* { box-sizing: border-box; }
+body { background: #190b13; margin: 0; padding: 25px 10px; text-align: center; }
+svg { width: 100%; max-width: 700px; height: auto; overflow: visible; }
+.heart-words { fill: #ff9bc8; font-family: "Noto Sans", Arial, sans-serif; font-size: 10px; }
+.border-words { fill: #ff75b5; font-family: "Noto Sans", Arial, sans-serif; font-size: 11px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<svg id="heartSVG" viewBox="0 0 500 450">
+    <defs>
+        <path id="heartPath" d="M250 410 C210 370 35 250 35 130 C35 20 175 10 250 115 C325 10 465 20 465 130 C465 250 290 370 250 410 Z"/>
+        <clipPath id="heartClip"><use href="#heartPath"/></clipPath>
+    </defs>
+    <g id="insideHeart" clip-path="url(#heartClip)"></g>
+    <text class="border-words"><textPath href="#heartPath" id="borderText"></textPath></text>
+</svg>
+<script>
+const words = [
+"دوستت دارم","I love you","Je t'aime","Te amo","Ti amo","Ich liebe dich",
+"Seni seviyorum","أحبك","Я тебя люблю","愛してる","사랑해","Eu te amo",
+"Σ' αγαπώ","Ik hou van jou","Jag älskar dig","Jeg elsker deg",
+"मैं तुमसे प्यार करता हूँ","我爱你","Ես քեզ սիրում եմ","Te iubesc"
+];
+const borderWords = [
+"I love you","Je t'aime","Te amo","Ti amo","Ich liebe dich","Seni seviyorum",
+"Я тебя люблю","愛してる","사랑해","Eu te amo","Σ' αγαπώ","Ik hou van jou",
+"Jag älskar dig","Jeg elsker deg","मैं तुमसे प्यार करता हूँ","我爱你",
+"Ես քեզ սիրում եմ","Te iubesc","Kocham cię","Я тебе кохаю"
+];
+function formatWord(word) {
+    if (/[\u0590-\u08FF]/.test(word)) return "\u2067" + word + "\u2069";
+    return word;
+}
+const formattedWords = words.map(formatWord);
+const formattedBorderWords = borderWords.map(formatWord);
+const svg = document.getElementById("heartSVG");
+const path = document.getElementById("heartPath");
+const inside = document.getElementById("insideHeart");
+const border = document.getElementById("borderText");
+const ns = "http://www.w3.org/2000/svg";
+let wordIndex = 0;
+function createTextRow(x, y, width) {
+    const text = document.createElementNS(ns, "text");
+    text.setAttribute("x", x);
+    text.setAttribute("y", y);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("class", "heart-words");
+    inside.appendChild(text);
+    let phraseList = [];
+    for (let i = 0; i < 30; i++) {
+        const phrase = formattedWords[wordIndex % formattedWords.length];
+        const test = [...phraseList, phrase].join("  ♥  ");
+        text.textContent = test;
+        let size = 10;
+        text.setAttribute("font-size", size);
+        while (text.getComputedTextLength() > width - 12 && size > 7) {
+            size -= 0.5;
+            text.setAttribute("font-size", size);
+        }
+        if (text.getComputedTextLength() > width - 12) break;
+        phraseList.push(phrase);
+        wordIndex++;
+    }
+    text.textContent = phraseList.join("  ♥  ");
+}
+function fillHeart() {
+    for (let y = 45; y <= 395; y += 17) {
+        let segments = [];
+        let start = null;
+        for (let x = 0; x <= 500; x += 2) {
+            const point = svg.createSVGPoint();
+            point.x = x; point.y = y;
+            const insideHeart = path.isPointInFill(point);
+            if (insideHeart && start === null) start = x;
+            if ((!insideHeart || x === 500) && start !== null) {
+                const end = x - 2;
+                if (end - start > 35) segments.push({start, end});
+                start = null;
+            }
+        }
+        segments.forEach(segment => {
+            const width = segment.end - segment.start;
+            const center = (segment.start + segment.end) / 2;
+            createTextRow(center, y, width);
+        });
+    }
+}
+function fillBorder() {
+    const repeated = (formattedBorderWords.join("   ♥   ") + "   ♥   ").repeat(3);
+    border.textContent = repeated;
+    const length = path.getTotalLength();
+    border.parentElement.setAttribute("textLength", length);
+    border.parentElement.setAttribute("lengthAdjust", "spacing");
+}
+fillHeart();
+fillBorder();
+</script>
+</body>
+</html>
